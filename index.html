@@ -1,23 +1,16 @@
 <!doctype html>
 <html lang="en" data-bs-theme="auto">
-  <head><script src="./assets/js/color-modes.js"></script>
-
+  <head>
+    <script src="./assets/js/color-modes.js"></script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
-    <meta name="generator" content="Hugo 0.122.0">
     <title>Sale</title>
-
-    <link rel="canonical" href="https://getbootstrap.com/docs/5.3/examples/">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3">
-
     <link href="./assets/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
     <link rel="stylesheet" href="style.css">
-
-    
   </head>
   <body>
+    <!-- Theme switcher SVGs -->
     <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
       <symbol id="check2" viewBox="0 0 16 16">
         <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
@@ -47,21 +40,21 @@
       <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="bd-theme-text">
         <li>
           <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="light" aria-pressed="false">
-            <svg class="bi me-2 opacity-50" width="1em" height="1em"><use href="#sun-fill"></use></svg>
+            <svg class="bi me-2 opacity-50 theme-icon" width="1em" height="1em"><use href="#sun-fill"></use></svg>
             Light
             <svg class="bi ms-auto d-none" width="1em" height="1em"><use href="#check2"></use></svg>
           </button>
         </li>
         <li>
           <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark" aria-pressed="false">
-            <svg class="bi me-2 opacity-50" width="1em" height="1em"><use href="#moon-stars-fill"></use></svg>
+            <svg class="bi me-2 opacity-50 theme-icon" width="1em" height="1em"><use href="#moon-stars-fill"></use></svg>
             Dark
             <svg class="bi ms-auto d-none" width="1em" height="1em"><use href="#check2"></use></svg>
           </button>
         </li>
         <li>
           <button type="button" class="dropdown-item d-flex align-items-center active" data-bs-theme-value="auto" aria-pressed="true">
-            <svg class="bi me-2 opacity-50" width="1em" height="1em"><use href="#circle-half"></use></svg>
+            <svg class="bi me-2 opacity-50 theme-icon" width="1em" height="1em"><use href="#circle-half"></use></svg>
             Auto
             <svg class="bi ms-auto d-none" width="1em" height="1em"><use href="#check2"></use></svg>
           </button>
@@ -69,275 +62,159 @@
       </ul>
     </div>
 
-    
-<header data-bs-theme="dark">
-  <div class="collapse text-bg-dark" id="navbarHeader">
-    <div class="container">
-      <div class="row">
-        <div class="col-sm-8 col-md-7 py-4">
-          <h4>About</h4>
-          <p class="text-body-secondary">Add some information about the album below, the author, or any other background context. Make it a few sentences long so folks can pick up some informative tidbits. Then, link them off to some social networking sites or contact information.</p>
+    <header data-bs-theme="dark">
+      <div class="navbar navbar-dark bg-dark shadow-sm">
+        <div class="container">
+          <a href="#" class="navbar-brand d-flex align-items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true" class="me-2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <strong>Fercho</strong>
+          </a>
+          <div class="d-flex">
+            <button type="button" class="btn btn-outline-light me-2" data-bs-toggle="modal" data-bs-target="#loginModal" id="loginBtn">Login</button>
+            <button id="logoutBtn" class="btn btn-outline-light d-none">Logout</button>
+          </div>
         </div>
-        <div class="col-sm-4 offset-md-1 py-4">
-          <h4>Contact</h4>
-          <ul class="list-unstyled">
-            <li><a href="#" class="text-white">Follow on Twitter</a></li>
-            <li><a href="#" class="text-white">Like on Facebook</a></li>
-            <li><a href="#" class="text-white">Email me</a></li>
-          </ul>
+      </div>
+    </header>
+
+    <main>
+      <section class="py-5 text-center container">
+        <div class="row py-lg-5">
+          <div class="col-lg-6 col-md-8 mx-auto">
+            <h1 class="fw-light">Venta de Garaje</h1>
+            <p class="lead text-body-secondary">Este es un catálogo de artículos en buen estado y a muy buen precio en mi venta de garaje.</p>
+            <div id="adminControls" class="d-none">
+              <button class="btn btn-primary" id="addImageBtn">Agregar Imagen</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="album py-5 bg-body-tertiary">
+        <div class="container">
+          <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3" id="imageContainer">
+            <!-- Las tarjetas se cargarán dinámicamente aquí -->
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Modal de Login -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="loginModalLabel">Login</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="loginForm">
+              <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" class="form-control" id="username" required>
+              </div>
+              <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <div class="input-group">
+                  <input type="password" class="form-control" id="password" required>
+                  <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                    <i class="bi bi-eye-slash"></i>
+                  </button>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary">Login</button>
+            </form>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-  <div class="navbar navbar-dark bg-dark shadow-sm">
-    <div class="container">
-      <a href="#" class="navbar-brand d-flex align-items-center">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true" class="me-2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        <strong>Fercho</strong>
-      </a>
-     <!-- <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarHeader" aria-controls="navbarHeader" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>-->
-    </div>
-  </div>
-</header>
 
-<main>
-  <section class="py-5 text-center container">
-    <div class="row py-lg-5">
-      <div class="col-lg-6 col-md-8 mx-auto">
-        <h1 class="fw-light">Venta de Garaje</h1>
-        <p class="lead text-body-secondary">Este es un catálogo de artículos en buen estado y a muy buen precio en mi venta de garaje.</p>
-        <p>
-         <!--- <a href="#" class="btn btn-primary my-2">Main call to action</a>
-          <a href="#" class="btn btn-secondary my-2">Secondary action</a> -->
+    <!-- Modal para agregar imagen -->
+    <div class="modal fade" id="addImageModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Agregar Imagen</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="addImageForm">
+              <div class="mb-3">
+                <label for="imageTitle" class="form-label">Título</label>
+                <input type="text" class="form-control" id="imageTitle" required>
+              </div>
+              <div class="mb-3">
+                <label for="imageDescription" class="form-label">Descripción</label>
+                <textarea class="form-control" id="imageDescription" required></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="imagePrice" class="form-label">Precio</label>
+                <input type="number" class="form-control" id="imagePrice" step="0.01" required>
+              </div>
+              <div class="mb-3">
+                <label for="imageFile" class="form-label">Imagen</label>
+                <input type="file" class="form-control" id="imageFile" accept="image/*" required>
+              </div>
+              <button type="submit" class="btn btn-primary">Guardar</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal para ver imagen -->
+    <div class="modal fade" id="viewImageModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body text-center">
+            <img id="modalImage" class="img-fluid" alt="Vista ampliada">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de edición -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Editar Imagen</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="editForm">
+              <div class="mb-3">
+                <label for="editTitle" class="form-label">Título</label>
+                <input type="text" class="form-control" id="editTitle" required>
+              </div>
+              <div class="mb-3">
+                <label for="editDescription" class="form-label">Descripción</label>
+                <textarea class="form-control" id="editDescription" rows="3" required></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="editPrice" class="form-label">Precio</label>
+                <input type="number" class="form-control" id="editPrice" step="0.01" min="0" required>
+              </div>
+              <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="text-body-secondary py-5">
+      <div class="container">
+        <p class="float-end mb-1">
+          <a href="#">Back to top</a>
         </p>
+        <p class="mb-1">Catalo de venta de garaje &copy; Fercho, no pida mas fotos si no va comprar nada, y si creer que el sitio necesita mejoras, estonces hagalas usted mismo!</p>
       </div>
-    </div>
-  </section>
+    </footer>
 
-  <div class="album py-5 bg-body-tertiary">
-    <div class="container">
-
-      <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
-        <div class="col">
-          <div class="card shadow-sm">
-            <div class="sold-badge">Vendido</div> <!-- Etiqueta de vendido -->
-            <img src="https://images.pexels.com/photos/27501709/pexels-photo-27501709.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" class="bd-placeholder-img card-img-top" width="100%" height="225" alt="Image Placeholder">
-            <div class="card-body">
-              <p class="card-text">Memorias Ram de 16 GB de ram, DRR4 para laptops</p>
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="btn-group">
-                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="showModal('https://images.pexels.com/photos/27501709/pexels-photo-27501709.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1')">View</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary  copy-btn" data-url="https://images.pexels.com/photos/27501709/pexels-photo-27501709.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1">copy</button>
-                </div>
-                <small class="text-body-secondary price-text">$3</small>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col">
-          <div class="card shadow-sm">
-            <div class="sold-badge">Vendido</div> <!-- Etiqueta de vendido -->
-            <img src="https://images.pexels.com/photos/27501708/pexels-photo-27501708.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" class="bd-placeholder-img card-img-top" width="100%" height="225" alt="Image Placeholder">
-            <div class="card-body">
-              <p class="card-text">Regleta de 3 metros de largo, para que conecten todos sus chunches, esta en buen estado, idal para cuado aremen un vacanal y necesiten conectar varios tereques</p>
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="btn-group">
-                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="showModal('https://images.pexels.com/photos/27501708/pexels-photo-27501708.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1')">View</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary  copy-btn" data-url="https://images.pexels.com/photos/27501708/pexels-photo-27501708.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1">copy</button>
-                </div>
-                <small class="text-body-secondary price-text">$3</small>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col">
-          <div class="card shadow-sm">
-            <img src="https://images.pexels.com/photos/26346282/pexels-photo-26346282.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" class="bd-placeholder-img card-img-top" width="100%" height="225" alt="Image Placeholder">
-            <div class="card-body">
-              <p class="card-text">Comic de Flash</p>
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="btn-group">
-                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="showModal('https://images.pexels.com/photos/26346282/pexels-photo-26346282.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1')">View</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary  copy-btn" data-url="https://images.pexels.com/photos/26346282/pexels-photo-26346282.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1">copy</button>
-                </div>
-                <small class="text-body-secondary price-text">$1</small>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col">
-          <div class="card shadow-sm">
-            <div class="sold-badge">Vendido</div> <!-- Etiqueta de vendido -->
-            <img src="https://images.pexels.com/photos/27501707/pexels-photo-27501707.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" class="bd-placeholder-img card-img-top" width="100%" height="225" alt="Image Placeholder">
-            <div class="card-body">
-              <p class="card-text">Extencion electrica, tambien de 3 metros, para conectar algun chunche, igual tambien les sirve para romperle la jupa a alguien.</p>
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="btn-group">
-                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="showModal('https://images.pexels.com/photos/27501707/pexels-photo-27501707.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1')">View</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary  copy-btn" data-url="https://images.pexels.com/photos/27501707/pexels-photo-27501707.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1">copy</button>
-                </div>
-                <small class="text-body-secondary price-text">1$</small>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col">
-          <div class="card shadow-sm">
-            <div class="new-badge">New</div>
-            <img src="https://images.pexels.com/photos/27501705/pexels-photo-27501705.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" class="bd-placeholder-img card-img-top" width="100%" height="225" alt="Image Placeholder">
-            <div class="card-body">
-              <p class="card-text">Mause Pad, esta nuevo, para cuando necesiten uno ahi lo tienen pues</p>
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="btn-group">
-                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="showModal('https://images.pexels.com/photos/27501705/pexels-photo-27501705.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1')">View</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary  copy-btn" data-url="https://images.pexels.com/photos/26346280/pexels-photo-26346280.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1">copy</button>
-                </div>
-                <small class="text-body-secondary price-text">$2</small>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col">
-          <div class="card shadow-sm">
-            <img src="https://images.pexels.com/photos/26346277/pexels-photo-26346277.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" class="bd-placeholder-img card-img-top" width="100%" height="225" alt="Image Placeholder">
-            <div class="card-body">
-              <p class="card-text">Reglas francesas: útiles para trabajos de arquitectura o ingeniería civil</p>
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="btn-group">
-                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="showModal('https://images.pexels.com/photos/26346277/pexels-photo-26346277.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1')">View</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary  copy-btn" data-url="https://images.pexels.com/photos/26346277/pexels-photo-26346277.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1">copy</button>
-                </div>
-                <small class="text-body-secondary price-text">$1</small>
-              </div>
-            </div>
-          </div>
-        </div>
-       
-   
-  
-        <div class="col">
-          <div class="card shadow-sm">
-            <img src="https://images.pexels.com/photos/26346266/pexels-photo-26346266.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" class="bd-placeholder-img card-img-top" width="100%" height="225" alt="Image Placeholder">
-            <div class="card-body">
-              <p class="card-text">Marvel Cup Holder:Para que se tomen su tacita de café con estilo.</p>
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="btn-group">
-                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="showModal('https://images.pexels.com/photos/26346266/pexels-photo-26346266.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1')">View</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary  copy-btn" data-url="https://images.pexels.com/photos/26346266/pexels-photo-26346266.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1">copy</button>
-                </div>
-                <small class="text-body-secondary price-text">$3</small>
-              </div>
-            </div>
-          </div>
-        </div>
-  
-   
-        <div class="col">
-          <div class="card shadow-sm">
-            <img src="https://images.pexels.com/photos/26346264/pexels-photo-26346264.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" class="bd-placeholder-img card-img-top" width="100%" height="225" alt="Image Placeholder">
-            <div class="card-body">
-              <p class="card-text">Este libro es tuani Joy School, ya no me acuerdo pero me fue entretenido mas o menos la historia es de Katie, una joven de trece años que, que luego de mudarse a un nuevo lugar, enfrenta los desafíos de la adolescencia y la búsqueda de identidad. A través de nuevas amistades y experiencias, Katie aprende sobre el amor, la pérdida y el proceso de crecer.</p>
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="btn-group">
-                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="showModal('https://images.pexels.com/photos/26346264/pexels-photo-26346264.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1')">View</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary copy-btn" data-url=https://images.pexels.com/photos/26346264/pexels-photo-26346264.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1">Copy</button>
-                </div>
-                <small class="text-body-secondary price-text">$1</small>
-              </div>
-            </div>
-          </div>
-        </div>
-    
-     
-        <div class="col">
-          <div class="card shadow-sm">
-            <img src="https://images.pexels.com/photos/26367585/pexels-photo-26367585.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" class="bd-placeholder-img card-img-top" width="100%" height="225" alt="Image Placeholder">
-            <div class="card-body">
-              <p class="card-text">Libro Fangirl es una novela juvenil es relax seguro les gusta.</p>
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="btn-group">
-                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="showModal('https://images.pexels.com/photos/26367585/pexels-photo-26367585.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1')">View</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary copy-btn" data-url=https://images.pexels.com/photos/26367585/pexels-photo-26367585.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1">Copy</button>
-                </div>
-                <small class="text-body-secondary price-text">$3</small>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col">
-          <div class="card shadow-sm">
-            <img src="https://cdn.pixabay.com/photo/2024/07/06/01/21/01-21-31-888_1280.jpg" class="bd-placeholder-img card-img-top" width="100%" height="225" alt="Image Placeholder">
-            <div class="card-body">
-              <p class="card-text">Tacos Joma. Don Frank tiene de venta unos tocos en buen estado, bendecidos por ronaldinho</p>
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="btn-group">
-                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="showModal('https://cdn.pixabay.com/photo/2024/07/06/01/21/01-21-31-888_1280.jpg')">View</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary copy-btn" data-url="https://cdn.pixabay.com/photo/2024/07/06/01/21/01-21-31-888_1280.jpg">Copy</button>
-                </div>
-                <small class="text-body-secondary price-text">$46.20</small>
-              </div>
-            </div>
-          </div>
-        </div>
-
-
-
-
-      </div>
-    </div>
-  </div>
-</main>
-
-<footer class="text-body-secondary py-5">
-  <div class="container">
-    <p class="float-end mb-1">
-      <a href="#">Back to top</a>
-    </p>
-    <p class="mb-1">Catalo de venta de garaje &copy; Fercho, no pida mas fotos si no va comprar nada, y si creer que el sitio necesita mejoras, estonces hagalas usted mismo!</p>
-    
-  </div>
-</footer>
-<!-- Modal -->
-<div id="myModal" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeModal()">&times;</span>
-    <img id="modal-img" class="modal-img" src="" alt="Image Preview">
-  </div>
-</div>
-<script src="./assets/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-  function showModal(imageUrl) {
-        document.getElementById('modal-img').src = imageUrl;
-        document.getElementById('myModal').style.display = "block";
-      }
-
-      function closeModal() {
-        document.getElementById('myModal').style.display = "none";
-      }
-
-      window.onclick = function(event) {
-        if (event.target == document.getElementById('myModal')) {
-          closeModal();
-        }
-      }
-
-      document.querySelectorAll('.copy-btn').forEach(button => {
-        button.addEventListener('click', () => {
-          const url = button.getAttribute('data-url');
-          navigator.clipboard.writeText(url).then(() => {
-            alert('URL copied to clipboard: ' + url);
-          }).catch(err => {
-            console.error('Could not copy text: ', err);
-          });
-        });
-      });
-
-</script>
-
-    </body>
+    <script src="./assets/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+  </body>
 </html>
