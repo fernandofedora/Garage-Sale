@@ -13,7 +13,7 @@ const app = express();
 
 // Configuración de CORS
 const corsOptions = {
-  origin: 'http://127.0.0.1:5500', // Origen del frontend
+  origin: 'https://garage-sale-production-adbe.up.railway.app',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: false,
