@@ -11,13 +11,22 @@ const fs = require('fs').promises;
 
 const app = express();
 
+// Configuración de CORS
+const corsOptions = {
+  origin: 'http://127.0.0.1:5500', // Origen del frontend
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false,
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Servir archivos estáticos desde el directorio public
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
+// Servir archivos estáticos con CORS
+app.use('/uploads', cors(corsOptions), express.static(path.join(__dirname, 'public', 'uploads')));
 
 // Create connection pool for database
 const pool = mysql.createPool({

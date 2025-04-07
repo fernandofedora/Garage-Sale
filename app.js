@@ -1,5 +1,5 @@
-const API_URL = window.location.origin + '/api';
-const BASE_URL = window.location.origin;
+const API_URL = 'http://localhost:3000/api'; // Backend API
+const BASE_URL = 'http://localhost:3000'; // Backend base URL
 let token = localStorage.getItem('token');
 let userRole = null;
 
@@ -143,12 +143,10 @@ async function loadImages() {
 }
 
 function getFullImageUrl(imageUrl) {
-  // Si la URL ya es absoluta, devolverla tal cual
   if (imageUrl.startsWith('http')) {
     return imageUrl;
   }
-  // Si no, construir la URL completa
-  return `${BASE_URL}${imageUrl}`;
+  return `${BASE_URL}${imageUrl}`; // Usa la URL del backend
 }
 
 function renderImages(images) {
