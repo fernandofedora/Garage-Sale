@@ -9,6 +9,19 @@ const path = require('path');
 const sharp = require('sharp');
 const fs = require('fs').promises;
 
+// Crear el directorio public/uploads si no existe
+async function ensureUploadsDir() {
+  const uploadsDir = path.join(__dirname, 'public', 'uploads');
+  try {
+    await fs.mkdir(uploadsDir, { recursive: true });
+    console.log('Directorio public/uploads creado o ya existe');
+  } catch (err) {
+    console.error('Error al crear el directorio public/uploads:', err);
+  }
+}
+// Llamar a la función al iniciar el servidor
+ensureUploadsDir();
+
 const app = express();
 
 // Configuración de CORS
