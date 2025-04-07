@@ -1,5 +1,12 @@
-const API_URL = 'http://localhost:3000/api'; // Backend API
-const BASE_URL = 'http://localhost:3000'; // Backend base URL
+// Determina las URLs del backend según el entorno
+const API_URL = window.location.hostname === 'localhost' 
+  ? 'http://localhost:3000/api' 
+  : 'https://garage-sale-production-adbe.up.railway.app/api';
+
+const BASE_URL = window.location.hostname === 'localhost' 
+  ? 'http://localhost:3000' 
+  : 'https://garage-sale-production-adbe.up.railway.app';
+
 let token = localStorage.getItem('token');
 let userRole = null;
 
@@ -146,7 +153,7 @@ function getFullImageUrl(imageUrl) {
   if (imageUrl.startsWith('http')) {
     return imageUrl;
   }
-  return `${BASE_URL}${imageUrl}`; // Usa la URL del backend
+  return `${BASE_URL}${imageUrl}`; // Usa la URL del backend dinámica
 }
 
 function renderImages(images) {
