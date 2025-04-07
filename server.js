@@ -23,8 +23,11 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+
+
 // Servir archivos estáticos desde el directorio public
-app.use(express.static(path.join(__dirname, 'public')));
+//app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '.')))
 // Servir archivos estáticos con CORS
 app.use('/uploads', cors(corsOptions), express.static(path.join(__dirname, 'public', 'uploads')));
 
