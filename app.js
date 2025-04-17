@@ -92,6 +92,9 @@ if (token) {
   loginBtn.classList.add('d-none');
   logoutBtn.classList.remove('d-none');
   if (adminControls) adminControls.classList.remove('d-none');
+  if (userRole === 'super_admin') {
+    loadSalesHistory(); // Cargar ventas si es super admin
+  }
 }
 
 // Cargar imágenes al iniciar
@@ -120,6 +123,9 @@ async function handleLogin(e) {
       loginModal.hide();
       document.getElementById('loginForm').reset();
       loadImages(); // Recargar imágenes para actualizar los botones
+      if (userRole === 'super_admin') {
+        loadSalesHistory();
+      }
     } else {
       alert(data.error);
     }
@@ -136,6 +142,8 @@ function logout() {
   loginBtn.classList.remove('d-none');
   logoutBtn.classList.add('d-none');
   if (adminControls) adminControls.classList.add('d-none');
+  const salesHistory = document.getElementById('salesHistory');
+  if (salesHistory) salesHistory.classList.add('d-none'); // Ocultar tabla de ventas
   loadImages(); // Recargar imágenes para actualizar los botones
 }
 
@@ -159,9 +167,10 @@ function getFullImageUrl(imageUrl) {
 function renderImages(images) {
   imageContainer.innerHTML = images.map(image => `
     <div class="col">
-      <div class="card shadow-sm ${image.is_blocked ? 'blocked' : ''} ${image.sold ? 'sold' : ''}">
+      <div class="card shadow-sm ${image.is_blocked ? 'blocked' : ''} ${image.sold ? 'sold' : ''} ${image.coming_soon ? 'coming-soon' : ''}">
         ${image.is_blocked ? '<div class="blocked-badge">Bloqueado</div>' : ''}
         ${image.sold ? '<div class="sold-badge">Vendido</div>' : ''}
+        ${image.coming_soon ? '<div class="coming-soon-badge">Próximamente</div>' : ''}
         <img src="${getFullImageUrl(image.image_url)}" class="bd-placeholder-img card-img-top" width="100%" height="225" alt="${image.title}">
         <div class="card-body">
           <h5 class="card-title">${image.title}</h5>
@@ -170,8 +179,11 @@ function renderImages(images) {
             <div class="btn-group">
               <button type="button" class="btn btn-sm btn-outline-secondary view-btn" onclick="showImageModal('${getFullImageUrl(image.image_url)}')">Ver</button>
               <button type="button" class="btn btn-sm btn-outline-secondary copy-btn" data-url="${getFullImageUrl(image.image_url)}">Copiar URL</button>
-              ${!image.sold ? 
-                `<button type="button" class="btn btn-sm btn-outline-primary buy-btn" onclick="buyImage(${image.id})">Comprar</button>` 
+              ${!image.sold && !image.coming_soon ? 
+                `<button type="button" class="btn btn-sm btn-outline-primary buy-btn" onclick="buyImage(${image.id}, '${image.title}')">Comprar</button>` 
+                : ''}
+              ${image.coming_soon ? 
+                `<small class="text-muted">Disponible próximamente</small>` 
                 : ''}
               ${token && (userRole === 'admin' || userRole === 'super_admin') ? `
                 <button type="button" class="btn btn-sm btn-outline-danger block-btn" onclick="toggleBlockImage(${image.id})">
@@ -186,6 +198,11 @@ function renderImages(images) {
                 <button type="button" class="btn btn-sm btn-outline-danger delete-btn" onclick="deleteImage(${image.id})">
                   Eliminar
                 </button>
+                ${userRole === 'super_admin' ? `
+                  <button type="button" class="btn btn-sm btn-outline-primary" onclick="toggleComingSoon('${image.id}')">
+                    ${image.coming_soon ? 'Quitar Próximamente' : 'Marcar como Próximamente'}
+                  </button>
+                ` : ''}
               ` : ''}
             </div>
             <small class="text-body-secondary price-text">$${image.price}</small>
@@ -239,25 +256,8 @@ function showImageModal(imageUrl) {
   viewImageModal.show();
 }
 
-async function buyImage(imageId) {
-  try {
-    const response = await fetch(`${API_URL}/images/${imageId}/buy`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (response.ok) {
-      loadImages(); // Recargar imágenes para mostrar el estado actualizado
-    } else {
-      const data = await response.json();
-      alert(data.error || 'Error al procesar la compra');
-    }
-  } catch (err) {
-    alert('Error al procesar la compra');
-    console.error('Error:', err);
-  }
+async function buyImage(imageId, title) {
+  showPurchaseModal(imageId, title);
 }
 
 async function toggleBlockImage(imageId) {
@@ -310,6 +310,33 @@ async function toggleSoldStatus(imageId) {
     }
   } catch (err) {
     alert('Error al cambiar el estado de venta');
+    console.error('Error:', err);
+  }
+}
+
+async function toggleComingSoon(imageId) {
+  if (!token || userRole !== 'super_admin') {
+    alert('Solo los super administradores pueden cambiar el estado de "Próximamente"');
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/images/${imageId}/toggle-coming-soon`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (response.ok) {
+      loadImages();
+    } else {
+      const data = await response.json();
+      alert(data.error);
+    }
+  } catch (err) {
+    alert('Error al cambiar el estado de "Próximamente"');
     console.error('Error:', err);
   }
 }
@@ -388,5 +415,93 @@ async function deleteImage(imageId) {
   }
 }
 
+// Función para mostrar el modal de compra
+function showPurchaseModal(imageId, title) {
+  document.getElementById('customerName').value = '';
+  document.getElementById('productName').value = title;
+  document.getElementById('purchaseForm').dataset.imageId = imageId;
+  const purchaseModal = new bootstrap.Modal(document.getElementById('purchaseModal'));
+  purchaseModal.show();
+}
+
+// Manejar la compra con nombre del cliente
+async function handlePurchase(e) {
+  e.preventDefault();
+  
+  const imageId = e.target.dataset.imageId;
+  const customerName = document.getElementById('customerName').value;
+
+  if (!customerName.trim()) {
+    alert('Por favor ingrese el nombre del cliente');
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/images/${imageId}/buy`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ customerName })
+    });
+
+    if (response.ok) {
+      const purchaseModal = bootstrap.Modal.getInstance(document.getElementById('purchaseModal'));
+      if (purchaseModal) purchaseModal.hide();
+      loadImages();
+      
+      // Si el usuario es super admin, actualizar el historial de ventas
+      if (userRole === 'super_admin') {
+        loadSalesHistory();
+      }
+
+      alert('¡Compra exitosa!');
+    } else {
+      const data = await response.json();
+      alert(data.error || 'Error al procesar la compra');
+    }
+  } catch (err) {
+    alert('Error al procesar la compra');
+    console.error('Error:', err);
+  }
+}
+
+// Cargar historial de ventas (solo super admin)
+async function loadSalesHistory() {
+  if (!token || userRole !== 'super_admin') return;
+
+  try {
+    const response = await fetch(`${API_URL}/sales`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (response.ok) {
+      const sales = await response.json();
+      const salesTableBody = document.getElementById('salesTableBody');
+      
+      salesTableBody.innerHTML = sales.map(sale => `
+        <tr>
+          <td>${new Date(sale.purchase_date).toLocaleString()}</td>
+          <td>${sale.product_name}</td>
+          <td>${sale.customer_name}</td>
+        </tr>
+      `).join('');
+
+      // Mostrar la tabla si hay ventas
+      const salesHistory = document.getElementById('salesHistory');
+      if (sales.length > 0) {
+        salesHistory.classList.remove('d-none');
+      } else {
+        salesHistory.classList.add('d-none');
+      }
+    }
+  } catch (err) {
+    console.error('Error loading sales history:', err);
+  }
+}
+
 // Event listeners
 editForm.addEventListener('submit', handleEdit);
+document.getElementById('purchaseForm')?.addEventListener('submit', handlePurchase);
