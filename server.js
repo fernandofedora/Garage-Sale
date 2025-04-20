@@ -68,7 +68,7 @@ async function setupDatabase() {
 
     await setupConnection.query(`CREATE DATABASE IF NOT EXISTS ${process.env.DB_NAME || 'garage_sale'}`);
     await setupConnection.query(`USE ${process.env.DB_NAME || 'garage_sale'}`);
-
+    
     // Create users table
     await setupConnection.query(`
       CREATE TABLE IF NOT EXISTS users (
@@ -90,7 +90,6 @@ async function setupDatabase() {
         image_url VARCHAR(255) NOT NULL,
         is_blocked BOOLEAN DEFAULT FALSE,
         sold BOOLEAN DEFAULT FALSE,
-        coming_soon BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -108,31 +107,6 @@ async function setupDatabase() {
         console.log('Columna sold agregada a la tabla images');
       }
     }
-
-    // Asegurarse de que la columna coming_soon existe
-    try {
-      await setupConnection.query(`
-        SELECT coming_soon FROM images LIMIT 1
-      `);
-    } catch (err) {
-      if (err.code === 'ER_BAD_FIELD_ERROR') {
-        await setupConnection.query(`
-          ALTER TABLE images ADD COLUMN coming_soon BOOLEAN DEFAULT FALSE
-        `);
-        console.log('Columna coming_soon agregada a la tabla images');
-      }
-    }
-
-    // Crear tabla de ventas
-    await setupConnection.query(`
-      CREATE TABLE IF NOT EXISTS sales (
-        id INT PRIMARY KEY AUTO_INCREMENT,
-        image_id INT NOT NULL,
-        customer_name VARCHAR(255) NOT NULL,
-        purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (image_id) REFERENCES images(id)
-      )
-    `);
 
     console.log('Database setup completed successfully');
   } catch (err) {
@@ -215,14 +189,6 @@ const verifyToken = (req, res, next) => {
 const verifyAdmin = (req, res, next) => {
   if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
     return res.status(403).json({ error: 'Requires admin privileges' });
-  }
-  next();
-};
-
-// Middleware to verify super admin role
-const verifySuperAdmin = (req, res, next) => {
-  if (req.user.role !== 'super_admin') {
-    return res.status(403).json({ error: 'Requires super admin privileges' });
   }
   next();
 };
@@ -337,53 +303,22 @@ app.get('/api/images', async (req, res) => {
   }
 });
 
-// Buy image with customer name
+// Buy image (public access)
 app.post('/api/images/:id/buy', async (req, res) => {
   try {
-    const { customerName } = req.body;
-    
-    // Primero verificar si la imagen está disponible
-    const [image] = await pool.query('SELECT * FROM images WHERE id = ? AND sold = FALSE', [req.params.id]);
-    if (image.length === 0) {
+    const [result] = await pool.query(
+      'UPDATE images SET sold = TRUE WHERE id = ? AND sold = FALSE',
+      [req.params.id]
+    );
+
+    if (result.affectedRows === 0) {
       return res.status(400).json({ error: 'Image not available for purchase' });
     }
 
-    // Iniciar transacción
-    const connection = await pool.getConnection();
-    try {
-      await connection.beginTransaction();
-
-      // Actualizar estado de la imagen
-      await connection.query('UPDATE images SET sold = TRUE WHERE id = ?', [req.params.id]);
-
-      // Registrar la venta
-      await connection.query('INSERT INTO sales (image_id, customer_name) VALUES (?, ?)', 
-        [req.params.id, customerName]);
-
-      await connection.commit();
-      res.json({ message: 'Purchase successful' });
-    } catch (err) {
-      await connection.rollback();
-      throw err;
-    } finally {
-      connection.release();
-    }
+    res.json({ message: 'Purchase successful' });
   } catch (err) {
     console.error('Error processing purchase:', err);
     res.status(500).json({ error: 'Error processing purchase' });
-  }
-});
-
-// Get sales history (super admin only)
-app.get('/api/sales', verifyToken, verifySuperAdmin, async (req, res) => {
-  try {
-    const [sales] = await pool.query(
-      'SELECT s.*, i.title as product_name FROM sales s JOIN images i ON s.image_id = i.id ORDER BY s.purchase_date DESC'
-    );
-    res.json(sales);
-  } catch (err) {
-    console.error('Error fetching sales:', err);
-    res.status(500).json({ error: 'Error fetching sales' });
   }
 });
 
@@ -412,20 +347,6 @@ app.put('/api/images/:id/toggle-sold', verifyToken, verifyAdmin, async (req, res
   } catch (err) {
     console.error('Error updating image sold status:', err);
     res.status(500).json({ error: 'Error updating image sold status' });
-  }
-});
-
-// Toggle coming soon status (super admin only)
-app.put('/api/images/:id/toggle-coming-soon', verifyToken, verifySuperAdmin, async (req, res) => {
-  try {
-    const [result] = await pool.query(
-      'UPDATE images SET coming_soon = NOT coming_soon WHERE id = ?',
-      [req.params.id]
-    );
-    res.json({ message: 'Image coming soon status updated successfully' });
-  } catch (err) {
-    console.error('Error updating image coming soon status:', err);
-    res.status(500).json({ error: 'Error updating image coming soon status' });
   }
 });
 
