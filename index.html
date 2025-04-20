@@ -153,13 +153,9 @@
               </div>
               <div class="mb-3">
                 <div class="form-check">
-                  <input class="form-check-input" type="radio" name="imageSource" id="uploadImage" value="upload" checked>
-                  <label class="form-check-label" for="uploadImage">Subir imagen</label>
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" name="imageSource" id="imageUrl" value="url">
-                  <label class="form-check-label" for="imageUrl">URL de imagen</label>
-                </div>
+  <input class="form-check-input" type="radio" name="imageSource" id="uploadImage" value="upload" checked hidden>
+  <label class="form-check-label" for="uploadImage" hidden>Subir imagen</label>
+</div>
               </div>
               <div id="uploadSection">
                 <div class="mb-3">
@@ -167,12 +163,7 @@
                   <input type="file" class="form-control" id="addImageFile" accept="image/*" required>
                 </div>
               </div>
-              <div id="urlSection" class="d-none">
-                <div class="mb-3">
-                  <label class="form-label">URL de la imagen</label>
-                  <input type="url" class="form-control" id="addImageUrl" required>
-                </div>
-              </div>
+              
               <button type="submit" class="btn btn-primary">Agregar</button>
             </form>
           </div>

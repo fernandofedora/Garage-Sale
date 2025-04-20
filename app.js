@@ -47,6 +47,13 @@ const editModal = new bootstrap.Modal(document.getElementById('editModal'));
 const editForm = document.getElementById('editForm');
 let currentEditId = null;
 
+// Elementos para agregar imagen
+const addImageForm = document.getElementById('addImageForm');
+const addImageTitle = document.getElementById('addImageTitle');
+const addImageDescription = document.getElementById('addImageDescription');
+const addImagePrice = document.getElementById('addImagePrice');
+const addImageFile = document.getElementById('addImageFile');
+
 // Limpiar backdrop al cerrar el modal
 loginModalElement.addEventListener('hidden.bs.modal', function () {
   const backdrop = document.querySelector('.modal-backdrop');
@@ -76,16 +83,18 @@ document.getElementById('loginForm').addEventListener('submit', handleLogin);
 logoutBtn.addEventListener('click', logout);
 loginBtn.addEventListener('click', () => {
   // Limpiar cualquier backdrop existente antes de mostrar el modal
-  const existingBackdrop = document.querySelector('.modal-backdrop');
-  if (existingBackdrop) {
-    existingBackdrop.remove();
-  }
+  const backdrop = document.querySelector('.modal-backdrop');
+  if (backdrop) backdrop.remove();
   document.body.classList.remove('modal-open');
   loginModal.show();
 });
 
-document.getElementById('addImageBtn')?.addEventListener('click', () => addImageModal.show());
-document.getElementById('addImageForm')?.addEventListener('submit', handleAddImage);
+// Listener para el botón de agregar imagen
+const addImageBtn = document.getElementById('addImageBtn');
+addImageBtn?.addEventListener('click', () => addImageModal.show());
+
+// Listener para el formulario de agregar imagen
+addImageForm?.addEventListener('submit', handleAddImage);
 
 // Verificar si hay un token guardado
 if (token) {
@@ -226,10 +235,10 @@ function renderImages(images) {
 async function handleAddImage(e) {
   e.preventDefault();
   const formData = new FormData();
-  formData.append('title', document.getElementById('imageTitle').value);
-  formData.append('description', document.getElementById('imageDescription').value);
-  formData.append('price', document.getElementById('imagePrice').value);
-  formData.append('image', document.getElementById('imageFile').files[0]);
+  formData.append('title', addImageTitle.value);
+  formData.append('description', addImageDescription.value);
+  formData.append('price', addImagePrice.value);
+  formData.append('image', addImageFile.files[0]);
 
   try {
     const response = await fetch(`${API_URL}/images`, {
@@ -241,7 +250,7 @@ async function handleAddImage(e) {
     const data = await response.json();
     if (response.ok) {
       addImageModal.hide();
-      document.getElementById('addImageForm').reset();
+      addImageForm.reset();
       loadImages();
     } else {
       alert(data.error);
