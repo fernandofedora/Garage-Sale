@@ -36,11 +36,8 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-
-
 // Servir archivos estáticos desde el directorio public
-//app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname, '.')))
+app.use(express.static(path.join(__dirname, '.')));
 // Servir archivos estáticos con CORS
 app.use('/uploads', cors(corsOptions), express.static(path.join(__dirname, 'public', 'uploads')));
 
@@ -59,7 +56,6 @@ const pool = mysql.createPool({
 async function setupDatabase() {
   let setupConnection;
   try {
-    // Create database if it doesn't exist
     setupConnection = await mysql.createConnection({
       host: process.env.DB_HOST || 'localhost',
       user: process.env.DB_USER || 'root',
@@ -129,14 +125,40 @@ async function setupDatabase() {
         id INT PRIMARY KEY AUTO_INCREMENT,
         image_id INT NOT NULL,
         customer_name VARCHAR(255) NOT NULL,
-        purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (image_id) REFERENCES images(id)
+        purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
-    console.log('Database setup completed successfully');
+    // Verificar si la clave foránea existe y tiene ON DELETE CASCADE
+    const [constraints] = await setupConnection.query(`
+      SELECT CONSTRAINT_NAME, DELETE_RULE
+      FROM information_schema.REFERENTIAL_CONSTRAINTS
+      WHERE TABLE_NAME = 'sales' AND CONSTRAINT_SCHEMA = ?
+    `, [process.env.DB_NAME || 'garage_sale']);
+
+    const fkExists = constraints.find(c => c.CONSTRAINT_NAME === 'sales_ibfk_1');
+    if (fkExists && fkExists.DELETE_RULE !== 'CASCADE') {
+      // Eliminar y recrear la clave foránea si no tiene ON DELETE CASCADE
+      await setupConnection.query(`ALTER TABLE sales DROP FOREIGN KEY sales_ibfk_1`);
+      await setupConnection.query(`
+        ALTER TABLE sales 
+        ADD CONSTRAINT sales_ibfk_1 
+        FOREIGN KEY (image_id) REFERENCES images(id) 
+        ON DELETE CASCADE
+      `);
+    } else if (!fkExists) {
+      // Crear la clave foránea si no existe
+      await setupConnection.query(`
+        ALTER TABLE sales 
+        ADD CONSTRAINT sales_ibfk_1 
+        FOREIGN KEY (image_id) REFERENCES images(id) 
+        ON DELETE CASCADE
+      `);
+    }
+
+    console.log('Configuración de la base de datos completada exitosamente');
   } catch (err) {
-    console.error('Error setting up database:', err);
+    console.error('Error al configurar la base de datos:', err);
     process.exit(1);
   } finally {
     if (setupConnection) {
@@ -152,14 +174,14 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+    cb(null, `${uniqueSuffix}${path.extname(file.originalname).toLowerCase()}`); // Usar extensión original
   }
 });
 
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB límite
+    fileSize: 10 * 1024 * 1024 // 10 MB límite
   },
   fileFilter: (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|gif|webp/;
@@ -176,20 +198,32 @@ const upload = multer({
 // Función para optimizar imagen
 async function optimizeImage(inputPath, outputPath) {
   try {
+    // Verificar si el archivo de entrada existe
+    await fs.access(inputPath);
+
+    // Convertir y optimizar la imagen
     await sharp(inputPath)
-      .resize(800, 600, { // tamaño máximo
+      .resize(800, 600, {
         fit: 'inside',
         withoutEnlargement: true
       })
-      .webp({ quality: 80 }) // convertir a webp para mejor compresión
+      .webp({ quality: 80 })
       .toFile(outputPath);
 
-    // Eliminar archivo original
-    await fs.unlink(inputPath);
+    // Verificar si el archivo optimizado se creó correctamente
+    await fs.access(outputPath);
+
+    console.log(`Imagen optimizada: ${outputPath}`);
     return outputPath;
   } catch (error) {
-    console.error('Error optimizing image:', error);
-    throw error;
+    console.error('Error al optimizar la imagen:', error.message);
+    // Si la optimización falla, eliminar el archivo optimizado (si existe)
+    try {
+      await fs.unlink(outputPath);
+    } catch (err) {
+      console.warn('No se pudo eliminar el archivo optimizado fallido:', err.message);
+    }
+    throw new Error('Fallo al optimizar la imagen: ' + error.message);
   }
 }
 
@@ -295,35 +329,69 @@ app.post('/api/create-admin', verifyToken, async (req, res) => {
 });
 
 // Upload image
-app.post('/api/images', verifyToken, upload.single('image'), async (req, res) => {
+app.post('/api/images', verifyToken, upload.single('image'), async (req, res, next) => {
   try {
+    // Verificar que se haya subido una imagen
     if (!req.file) {
       return res.status(400).json({ error: 'No se subió ninguna imagen' });
     }
 
+    // Validar los campos title, description y price
+    const { title, description, price } = req.body;
+    if (!title || typeof title !== 'string' || title.trim() === '') {
+      return res.status(400).json({ error: 'El título es obligatorio y debe ser una cadena no vacía' });
+    }
+    if (description && typeof description !== 'string') {
+      return res.status(400).json({ error: 'La descripción debe ser una cadena de texto' });
+    }
+    const priceNumber = parseFloat(price);
+    if (isNaN(priceNumber) || priceNumber <= 0) {
+      return res.status(400).json({ error: 'El precio debe ser un número mayor que 0' });
+    }
+
     // Optimizar imagen
-    const originalPath = req.file.path;
-    const optimizedPath = originalPath.replace(/\.[^.]+$/, '.webp');
+    const originalPath = req.file.path; // Ejemplo: public/uploads/1745194426166-844855877.jpg
+    const optimizedFileName = `${path.basename(originalPath, path.extname(originalPath))}.webp`; // Ejemplo: 1745194426166-844855877.webp
+    const optimizedPath = path.join(path.dirname(originalPath), optimizedFileName); // Ruta completa para el archivo optimizado
+
+    console.log(`Optimizando imagen: de ${originalPath} a ${optimizedPath}`);
     await optimizeImage(originalPath, optimizedPath);
 
-    // Crear URL relativa para la base de datos
-    const imageUrl = '/uploads/' + path.basename(optimizedPath);
+    // Eliminar el archivo original después de la optimización exitosa
+    try {
+      await fs.unlink(originalPath);
+      console.log(`Archivo original eliminado: ${originalPath}`);
+    } catch (err) {
+      console.warn(`No se pudo eliminar el archivo original: ${err.message}`);
+    }
 
+    // Crear URL relativa para la base de datos
+    const imageUrl = '/uploads/' + optimizedFileName;
+
+    // Insertar en la base de datos
     const [result] = await pool.query(
       'INSERT INTO images (title, description, price, image_url) VALUES (?, ?, ?, ?)',
-      [req.body.title, req.body.description, req.body.price, imageUrl]
+      [title.trim(), description ? description.trim() : null, priceNumber, imageUrl]
     );
 
     res.json({ 
       id: result.insertId,
-      title: req.body.title,
-      description: req.body.description,
-      price: req.body.price,
+      title: title.trim(),
+      description: description ? description.trim() : null,
+      price: priceNumber,
       image_url: imageUrl
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al subir la imagen' });
+    console.error('Error al subir la imagen:', err.message);
+    // Si hay un error, eliminar el archivo original si aún existe
+    if (req.file) {
+      try {
+        await fs.unlink(req.file.path);
+      } catch (unlinkErr) {
+        console.warn('No se pudo eliminar el archivo original después del error:', unlinkErr.message);
+      }
+    }
+    next(err); // Pasar el error al middleware de manejo de errores
   }
 });
 
@@ -452,34 +520,101 @@ app.put('/api/images/:id', verifyToken, verifyAdmin, async (req, res) => {
 // Delete image (admin only)
 app.delete('/api/images/:id', verifyToken, verifyAdmin, async (req, res) => {
   try {
-    // Primero obtener la URL de la imagen
+    // Obtener la URL de la imagen
     const [rows] = await pool.query('SELECT image_url FROM images WHERE id = ?', [req.params.id]);
     
     if (rows.length === 0) {
-      return res.status(404).json({ error: 'Image not found' });
+      return res.status(404).json({ error: 'Imagen no encontrada' });
     }
 
-    // Eliminar el archivo físico
-    const imagePath = path.join(__dirname, 'public', rows[0].image_url);
-    try {
-      await fs.unlink(imagePath);
-    } catch (err) {
-      console.error('Error deleting image file:', err);
-      // Continuar incluso si el archivo no se puede eliminar
-    }
-
-    // Eliminar el registro de la base de datos
+    // Eliminar el registro de la base de datos primero
     const [result] = await pool.query('DELETE FROM images WHERE id = ?', [req.params.id]);
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Image not found' });
+      return res.status(404).json({ error: 'Imagen no encontrada' });
     }
 
-    res.json({ message: 'Image deleted successfully' });
+    // Intentar eliminar el archivo físico
+    const imageUrl = rows[0].image_url; // Por ejemplo, "/uploads/1743968545572-123456789.webp"
+    const imagePath = path.join(__dirname, 'public', imageUrl); // Ruta completa
+
+    // Intentar eliminar el archivo con la extensión almacenada (.webp)
+    try {
+      await fs.access(imagePath);
+      await fs.unlink(imagePath);
+      console.log(`Archivo eliminado exitosamente: ${imagePath}`);
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        console.warn(`Archivo no encontrado, omitiendo eliminación: ${imagePath}`);
+      } else {
+        console.error('Error al eliminar el archivo de imagen:', err);
+      }
+    }
+
+    // Intentar eliminar posibles archivos originales con otras extensiones (como .jpg, .png, etc.)
+    const baseFileName = path.basename(imageUrl, '.webp'); // Obtener el nombre sin extensión
+    const possibleExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
+    for (const ext of possibleExtensions) {
+      const possibleFilePath = path.join(__dirname, 'public', 'uploads', `${baseFileName}${ext}`);
+      try {
+        await fs.access(possibleFilePath);
+        await fs.unlink(possibleFilePath);
+        console.log(`Archivo original eliminado: ${possibleFilePath}`);
+      } catch (err) {
+        if (err.code !== 'ENOENT') {
+          console.error(`Error al eliminar posible archivo original ${possibleFilePath}:`, err);
+        }
+      }
+    }
+
+    res.json({ message: 'Imagen eliminada exitosamente' });
   } catch (err) {
-    console.error('Error deleting image:', err);
-    res.status(500).json({ error: 'Error deleting image' });
+    console.error('Error al eliminar la imagen:', err);
+    res.status(500).json({ error: 'Error al eliminar la imagen' });
   }
+});
+
+// Script para limpiar la carpeta public/uploads (ejecutar una vez y luego eliminar)
+async function cleanUploadsFolder() {
+  try {
+    // Obtener todas las URLs de imágenes desde la base de datos
+    const [images] = await pool.query('SELECT image_url FROM images');
+    const validFiles = images.map(img => path.basename(img.image_url)); // Ejemplo: ["1743962988919-180291048.webp", ...]
+
+    // Obtener todos los archivos en la carpeta public/uploads
+    const uploadsDir = path.join(__dirname, 'public', 'uploads');
+    const files = await fs.readdir(uploadsDir);
+
+    // Eliminar archivos que no estén en la base de datos
+    for (const file of files) {
+      if (!validFiles.includes(file)) {
+        const filePath = path.join(uploadsDir, file);
+        await fs.unlink(filePath);
+        console.log(`Archivo eliminado (no registrado en la base de datos): ${filePath}`);
+      }
+    }
+
+    console.log('Limpieza de la carpeta uploads completada');
+  } catch (err) {
+    console.error('Error al limpiar la carpeta uploads:', err);
+  }
+}
+
+// Middleware para manejar errores de multer
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'El archivo es demasiado grande. El límite es de 10 MB.' });
+    }
+    return res.status(400).json({ error: err.message });
+  }
+  next(err);
+});
+
+// Middleware general para manejar errores no capturados
+app.use((err, req, res, next) => {
+  console.error('Error no manejado:', err.message);
+  res.status(500).json({ error: 'Error interno del servidor: ' + err.message });
 });
 
 // Initialize database and start server
@@ -491,7 +626,10 @@ async function startServer() {
   });
 }
 
-startServer().catch(err => {
+// Iniciar el servidor y ejecutar la limpieza (descomentar la línea de cleanUploadsFolder solo para ejecutarla una vez)
+startServer().then(() => {
+  // cleanUploadsFolder(); // Descomentar esta línea para ejecutar la limpieza una vez, luego volver a comentarla
+}).catch(err => {
   console.error('Failed to start server:', err);
   process.exit(1);
 });
