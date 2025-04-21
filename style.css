@@ -91,11 +91,6 @@
   position: relative;
 }
 
-.card.coming-soon {
-  opacity: 0.9;
-  position: relative;
-}
-
 .card-img-top {
   object-fit: cover;
   height: 225px;
@@ -180,8 +175,7 @@
 }
 
 .blocked-badge,
-.sold-badge,
-.coming-soon-badge {
+.sold-badge {
   position: absolute;
   top: 10px;
   right: 10px;
@@ -203,11 +197,6 @@
   background-color: #dc3545;
   color: white;
   animation: pulse 2s infinite;
-}
-
-.coming-soon-badge {
-  background-color: #ffc107;
-  color: #000;
 }
 
 @keyframes pulse {

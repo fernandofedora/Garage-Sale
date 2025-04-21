@@ -16,24 +16,11 @@ CREATE TABLE IF NOT EXISTS images (
   price DECIMAL(10,2) NOT NULL,
   image_url VARCHAR(255) NOT NULL,
   is_blocked BOOLEAN DEFAULT FALSE,
-  sold BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Add sold column to images table if it doesn't exist
 ALTER TABLE images ADD COLUMN IF NOT EXISTS sold BOOLEAN DEFAULT FALSE;
--- Add coming_soon column to images table
-ALTER TABLE images ADD COLUMN IF NOT EXISTS coming_soon BOOLEAN DEFAULT FALSE;
 
 -- If the above fails, try this alternative
 -- ALTER TABLE images ADD COLUMN sold BOOLEAN DEFAULT FALSE;
--- ALTER TABLE images ADD COLUMN sold BOOLEAN DEFAULT FALSE;
-
--- Create sales table
-CREATE TABLE IF NOT EXISTS sales (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  image_id INT NOT NULL,
-  customer_name VARCHAR(255) NOT NULL,
-  purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (image_id) REFERENCES images(id)
-);
